@@ -35,3 +35,22 @@ Pods/
 
 # Carthage
 Carthage/Build/
+
+# Security - Never commit these
+*.pem
+*.p12
+*.key
+*.mobileprovision
+*.provisionprofile
+secrets/
+credentials/
+.env
+.env.*
+*.secret
+
+# Distribution
+dist/
+*.dmg
+
+# Logs
+*.log
