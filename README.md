@@ -20,6 +20,7 @@ Aplikacion per Mac qe shfaq kohet e namazit per qytetet ne Evrope. Perdor te dhe
 | Danimarka | Kobenhavn, Aarhus |
 | Britania | London, Birmingham, Manchester, Leeds |
 | Italia | Roma, Milano, Torino, Firenze |
+| Finlanda | Helsinki, Vantaa |
 
 ---
 
