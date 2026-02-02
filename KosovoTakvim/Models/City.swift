@@ -25,6 +25,7 @@ enum Country: String, Codable, CaseIterable, Identifiable {
     case denmark = "DK"
     case unitedKingdom = "GB"
     case italy = "IT"
+    case finland = "FI"
 
     var id: String { rawValue }
 
@@ -42,6 +43,7 @@ enum Country: String, Codable, CaseIterable, Identifiable {
         case .denmark: return "Danimarka"
         case .unitedKingdom: return "Britania"
         case .italy: return "Italia"
+        case .finland: return "Finlanda"
         }
     }
 
@@ -59,6 +61,7 @@ enum Country: String, Codable, CaseIterable, Identifiable {
         case .denmark: return "🇩🇰"
         case .unitedKingdom: return "🇬🇧"
         case .italy: return "🇮🇹"
+        case .finland: return "🇫🇮"
         }
     }
 }
@@ -166,6 +169,12 @@ extension City {
         City(id: "florence", name: "Firenze", country: .italy, latitude: 43.7696, longitude: 11.2558)
     ]
 
+    // MARK: - Finland Cities
+    static let finlandCities: [City] = [
+        City(id: "helsinki", name: "Helsinki", country: .finland, latitude: 60.1699, longitude: 24.9384),
+        City(id: "vantaa", name: "Vantaa", country: .finland, latitude: 60.2934, longitude: 25.0378)
+    ]
+
     // MARK: - All Cities
     static let allCities: [City] = {
         var cities: [City] = []
@@ -181,6 +190,7 @@ extension City {
         cities.append(contentsOf: denmarkCities)
         cities.append(contentsOf: ukCities)
         cities.append(contentsOf: italyCities)
+        cities.append(contentsOf: finlandCities)
         return cities
     }()
 
@@ -197,7 +207,8 @@ extension City {
         (.norway, norwayCities),
         (.denmark, denmarkCities),
         (.unitedKingdom, ukCities),
-        (.italy, italyCities)
+        (.italy, italyCities),
+        (.finland, finlandCities)
     ]
 
     static let `default` = kosovoCities[0] // Prishtina
