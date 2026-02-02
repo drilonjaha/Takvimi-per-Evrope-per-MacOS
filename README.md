@@ -26,7 +26,7 @@ Aplikacion per Mac qe shfaq kohet e namazit per qytetet ne Evrope. Perdor te dhe
 
 ## Shkarko
 
-**[Shkarko Takvimi.dmg](https://github.com/drilonjaha/Takvimi-per-Evrope-per-MacOS/releases/latest/download/Takvimi.dmg)**
+**[Shkarko Takvimin.dmg](https://github.com/drilonjaha/Takvimi-per-Evrope-per-MacOS/releases/latest/download/Shkarko.Takvimin.dmg)**
 
 Ose shko te faqja [Releases](https://github.com/drilonjaha/Takvimi-per-Evrope-per-MacOS/releases).
 
