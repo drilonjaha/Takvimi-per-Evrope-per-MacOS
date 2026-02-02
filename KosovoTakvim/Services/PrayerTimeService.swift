@@ -27,12 +27,14 @@ actor PrayerTimeService {
     static let shared = PrayerTimeService()
 
     private var cache: [String: DailyPrayerTimes] = [:]
-    private let cacheKey = "cachedPrayerTimes_v2" // v2: Fixed timezone-aware caching
-    private let oldCacheKey = "cachedPrayerTimes" // Old cache key to clear
+    private let cacheKey = "cachedPrayerTimes_v3" // v3: IZRS Swiss calculation method
+    private let oldCacheKeys = ["cachedPrayerTimes", "cachedPrayerTimes_v2"] // Old cache keys to clear
 
     init() {
-        // Clear old cache from buggy version
-        UserDefaults.standard.removeObject(forKey: oldCacheKey)
+        // Clear old cache from previous versions
+        for oldKey in oldCacheKeys {
+            UserDefaults.standard.removeObject(forKey: oldKey)
+        }
         loadCacheFromDisk()
     }
 
@@ -77,7 +79,9 @@ actor PrayerTimeService {
 
     private func fetchFromAPI(city: City, date: Date) async throws -> DailyPrayerTimes {
         let baseURL = "https://api.aladhan.com/v1/timings"
-        let methodSettings = "18,null,17" // BIM Kosovo angles
+
+        // Get calculation settings based on country
+        let (methodSettings, tune) = getCalculationSettings(for: city, date: date)
 
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "dd-MM-yyyy"
@@ -87,13 +91,20 @@ actor PrayerTimeService {
         let timezone = getTimezone(for: city)
 
         var components = URLComponents(string: "\(baseURL)/\(dateString)")!
-        components.queryItems = [
+        var queryItems = [
             URLQueryItem(name: "latitude", value: String(city.latitude)),
             URLQueryItem(name: "longitude", value: String(city.longitude)),
             URLQueryItem(name: "method", value: "99"),
             URLQueryItem(name: "methodSettings", value: methodSettings),
             URLQueryItem(name: "timezonestring", value: timezone)
         ]
+
+        // Add tune parameter if needed (for IZRS Swiss adjustments)
+        if let tune = tune {
+            queryItems.append(URLQueryItem(name: "tune", value: tune))
+        }
+
+        components.queryItems = queryItems
 
         guard let url = components.url else {
             throw PrayerTimeError.invalidResponse
@@ -162,6 +173,37 @@ actor PrayerTimeService {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         return "\(city.id)_\(dateFormatter.string(from: date))"
+    }
+
+    // Returns (methodSettings, tune) - tune is optional for Fajr/Isha adjustments
+    private func getCalculationSettings(for city: City, date: Date) -> (String, String?) {
+        switch city.country {
+        case .switzerland:
+            // IZRS Switzerland recommended settings
+            // Uses UOIF angles (12° Fajr, 12° Isha) with seasonal Fajr adjustments
+            // Source: https://www.izrs.ch/empirisch-fundierte-winkelbestimmung-definitive-gebetszeiten-fuer-die-schweiz.html
+            let calendar = Calendar.current
+            let month = calendar.component(.month, from: date)
+            let day = calendar.component(.day, from: date)
+
+            // Seasonal adjustment for Fajr:
+            // Sept 23 - March 20: -5 minutes
+            // March 21 - Sept 22: -10 minutes
+            let isWinterPeriod = (month > 9 || month < 3 || (month == 9 && day >= 23) || (month == 3 && day <= 20))
+            let fajrAdjust = isWinterPeriod ? -5 : -10
+
+            // tune format: Imsak,Fajr,Sunrise,Dhuhr,Asr,Maghrib,Isha,Midnight
+            let tune = "\(fajrAdjust),\(fajrAdjust),0,0,0,0,0,0"
+            return ("12,null,12", tune) // UOIF angles
+
+        case .kosovo:
+            // BIM Kosovo angles (used for API fallback, main data is embedded)
+            return ("18,null,17", nil)
+
+        default:
+            // Default: BIM Kosovo angles for other European countries
+            return ("18,null,17", nil)
+        }
     }
 
     private func getTimezone(for city: City) -> String {
