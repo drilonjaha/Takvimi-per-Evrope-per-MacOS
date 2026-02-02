@@ -7,18 +7,16 @@ import Foundation
 struct PrayerTimesData2026 {
 
     // City time offsets in minutes (relative to base Takvim times)
-    // Base offset of +9 minutes to align with actual observed times
-    // The embedded BIM data was 9 minutes early compared to real prayer times
-    static let baseOffset = 9
-
+    // Official BIM data is calculated for western Kosovo (Deçan area)
+    // All cities use the same times as per official BIM app
     static let cityOffsets: [String: Int] = [
-        "prishtina": baseOffset,
-        "prizren": baseOffset,
-        "peja": baseOffset,
-        "gjakova": baseOffset,
-        "mitrovica": baseOffset,
-        "ferizaj": baseOffset,
-        "gjilan": baseOffset
+        "prishtina": 0,
+        "prizren": 0,
+        "peja": 0,
+        "gjakova": 0,
+        "mitrovica": 0,
+        "ferizaj": 0,
+        "gjilan": 0
     ]
 
     // Prayer times format: [day: (imsak, sabah, sunrise, dhuhr, asr, maghrib, isha)]

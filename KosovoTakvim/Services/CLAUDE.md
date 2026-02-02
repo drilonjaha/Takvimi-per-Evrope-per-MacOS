@@ -7,6 +7,11 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #254 | 5:39 PM | ✅ | Bumped Cache Version to v5 After Reverting Kosovo Correction | ~256 |
+| #252 | 5:38 PM | 🔴 | Removed 9-Minute Offset from Kosovo Prayer Times | ~295 |
+| #237 | 5:29 PM | ✅ | Cache Version Bumped to v4 for Kosovo Time Correction | ~277 |
+| #236 | " | 🔴 | Added v3 to macOS Cache Invalidation List | ~220 |
+| #234 | 5:28 PM | 🔴 | Added 9-Minute Offset Correction to Kosovo Prayer Times | ~331 |
 | #159 | 3:36 PM | 🟣 | Implemented IZRS-Specific Prayer Calculations for Switzerland | ~349 |
 | #157 | " | 🟣 | Bumped Cache Version to v3 for Swiss Calculation Method | ~306 |
 | #156 | 3:35 PM | 🟣 | Implemented IZRS Switzerland Prayer Time Calculation Method | ~412 |
