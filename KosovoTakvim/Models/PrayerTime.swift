@@ -1,6 +1,7 @@
 import Foundation
 
 enum Prayer: String, CaseIterable, Identifiable {
+    case imsak = "Imsaku"
     case fajr = "Sabahu"
     case sunrise = "Lindja e Diellit"
     case dhuhr = "Dreka"
@@ -12,6 +13,7 @@ enum Prayer: String, CaseIterable, Identifiable {
 
     var icon: String {
         switch self {
+        case .imsak: return "moon.fill"
         case .fajr: return "sunrise"
         case .sunrise: return "sun.horizon"
         case .dhuhr: return "sun.max"
@@ -21,16 +23,22 @@ enum Prayer: String, CaseIterable, Identifiable {
         }
     }
 
-    // Prayers that require notification (excluding sunrise)
+    // Prayers that require notification (excluding sunrise and imsak)
     var isObligatoryPrayer: Bool {
-        self != .sunrise
+        self != .sunrise && self != .imsak
+    }
+
+    // Whether to show in main prayer list
+    var isDisplayed: Bool {
+        true
     }
 }
 
 struct DailyPrayerTimes: Codable {
     let date: Date
     let city: City
-    let fajr: Date
+    let imsak: Date
+    let fajr: Date      // Sabahu = Imsak + 35 minutes
     let sunrise: Date
     let dhuhr: Date
     let asr: Date
@@ -38,8 +46,23 @@ struct DailyPrayerTimes: Codable {
     let isha: Date
     let hijriDate: String?
 
+    // Create with automatic Fajr calculation (Imsak + 35 min)
+    init(date: Date, city: City, imsak: Date, sunrise: Date, dhuhr: Date, asr: Date, maghrib: Date, isha: Date, hijriDate: String?) {
+        self.date = date
+        self.city = city
+        self.imsak = imsak
+        self.fajr = imsak.addingTimeInterval(35 * 60) // Sabahu is always Imsak + 35 min
+        self.sunrise = sunrise
+        self.dhuhr = dhuhr
+        self.asr = asr
+        self.maghrib = maghrib
+        self.isha = isha
+        self.hijriDate = hijriDate
+    }
+
     func time(for prayer: Prayer) -> Date {
         switch prayer {
+        case .imsak: return imsak
         case .fajr: return fajr
         case .sunrise: return sunrise
         case .dhuhr: return dhuhr
@@ -51,6 +74,7 @@ struct DailyPrayerTimes: Codable {
 
     func nextPrayer(after date: Date = Date()) -> (prayer: Prayer, time: Date)? {
         let prayers: [(Prayer, Date)] = [
+            (.imsak, imsak),
             (.fajr, fajr),
             (.sunrise, sunrise),
             (.dhuhr, dhuhr),
@@ -65,7 +89,13 @@ struct DailyPrayerTimes: Codable {
             }
         }
 
-        // All prayers passed, next is tomorrow's Fajr
+        // All prayers passed for today - return tomorrow's Imsak
+        // Calculate tomorrow's imsak time (same time, next day)
+        let calendar = Calendar.current
+        if let tomorrowImsak = calendar.date(byAdding: .day, value: 1, to: imsak) {
+            return (.imsak, tomorrowImsak)
+        }
+
         return nil
     }
 
@@ -76,7 +106,8 @@ struct DailyPrayerTimes: Codable {
             (.asr, asr),
             (.dhuhr, dhuhr),
             (.sunrise, sunrise),
-            (.fajr, fajr)
+            (.fajr, fajr),
+            (.imsak, imsak)
         ]
 
         for (prayer, time) in prayers {

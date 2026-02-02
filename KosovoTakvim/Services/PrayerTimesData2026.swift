@@ -467,7 +467,7 @@ struct PrayerTimesData2026 {
             return calendar.date(from: components)
         }
 
-        guard let fajr = parseTime(times.1, offset: offset),
+        guard let imsak = parseTime(times.0, offset: offset),
               let sunrise = parseTime(times.2, offset: offset),
               let dhuhr = parseTime(times.3, offset: offset),
               let asr = parseTime(times.4, offset: offset),
@@ -476,10 +476,11 @@ struct PrayerTimesData2026 {
             return nil
         }
 
+        // Fajr/Sabahu is automatically calculated as Imsak + 35 min in the initializer
         return DailyPrayerTimes(
             date: date,
             city: city,
-            fajr: fajr,
+            imsak: imsak,
             sunrise: sunrise,
             dhuhr: dhuhr,
             asr: asr,

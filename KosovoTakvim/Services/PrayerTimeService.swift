@@ -121,7 +121,8 @@ actor PrayerTimeService {
             return calendar.date(from: components)
         }
 
-        guard let fajr = parseTime(timings.Fajr),
+        // Use Imsak from API (Fajr/Sabahu will be calculated as Imsak + 35 min)
+        guard let imsak = parseTime(timings.Imsak),
               let sunrise = parseTime(timings.Sunrise),
               let dhuhr = parseTime(timings.Dhuhr),
               let asr = parseTime(timings.Asr),
@@ -133,10 +134,11 @@ actor PrayerTimeService {
         let hijri = response.data.date.hijri
         let hijriDate = "\(hijri.day) \(hijri.month.en) \(hijri.year)"
 
+        // Fajr/Sabahu is automatically calculated as Imsak + 35 min in the initializer
         return DailyPrayerTimes(
             date: date,
             city: city,
-            fajr: fajr,
+            imsak: imsak,
             sunrise: sunrise,
             dhuhr: dhuhr,
             asr: asr,

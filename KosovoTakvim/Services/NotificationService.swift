@@ -5,8 +5,7 @@ class NotificationService {
     static let shared = NotificationService()
 
     // How many minutes before prayer to send reminder
-    // TODO: Change back to 15 before shipping
-    private let reminderMinutesBefore: Int = 27
+    private let reminderMinutesBefore: Int = 15
 
     // Timers for playing voice reminders
     private var reminderTimers: [Prayer: Timer] = [:]

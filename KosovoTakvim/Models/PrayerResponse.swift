@@ -13,6 +13,7 @@ struct AladhanData: Codable {
 }
 
 struct AladhanTimings: Codable {
+    let Imsak: String
     let Fajr: String
     let Sunrise: String
     let Dhuhr: String

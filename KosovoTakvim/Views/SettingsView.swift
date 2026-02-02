@@ -15,10 +15,10 @@ struct SettingsView: View {
     var onNotificationToggle: ((Bool) -> Void)?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 0) {
             // Header
             HStack {
-                Text("Cilësimet")
+                Text("Cilesimet")
                     .font(.headline)
                 Spacer()
                 Button(action: { dismiss() }) {
@@ -27,101 +27,125 @@ struct SettingsView: View {
                 }
                 .buttonStyle(.plain)
             }
+            .padding(.bottom, 12)
 
             Divider()
 
-            // City Selection
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Qyteti")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    // City Selection with Country Grouping
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Qyteti")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .padding(.top, 12)
 
-                Picker("Qyteti", selection: $selectedCityId) {
-                    ForEach(City.allCities) { city in
-                        Text(city.name).tag(city.id)
+                        Picker("Qyteti", selection: $selectedCityId) {
+                            ForEach(City.citiesByCountry, id: \.country.id) { group in
+                                Section(header: Text("\(group.country.flag) \(group.country.name)")) {
+                                    ForEach(group.cities) { city in
+                                        Text(city.name).tag(city.id)
+                                    }
+                                }
+                            }
+                        }
+                        .labelsHidden()
+                        .onChange(of: selectedCityId) { newValue in
+                            if let city = City.find(by: newValue) {
+                                onCityChange?(city)
+                            }
+                        }
+
+                        // Show data source indicator
+                        if let city = City.find(by: selectedCityId) {
+                            HStack(spacing: 4) {
+                                Image(systemName: city.hasOfficialData ? "checkmark.seal.fill" : "globe")
+                                    .font(.system(size: 10))
+                                Text(city.hasOfficialData ? "Te dhenat zyrtare te BIK" : "Te dhenat nga Aladhan API")
+                                    .font(.system(size: 10))
+                            }
+                            .foregroundColor(city.hasOfficialData ? .green : .secondary)
+                        }
                     }
+
+                    Divider()
+
+                    // Display Options
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Shfaqja")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+
+                        Toggle("Shfaq emrin e namazit", isOn: $showPrayerName)
+                            .toggleStyle(.checkbox)
+                            .font(.system(size: 13))
+                    }
+
+                    Divider()
+
+                    // Notifications
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Njoftimet")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+
+                        Toggle("Aktivizo njoftimet", isOn: $notificationsEnabled)
+                            .toggleStyle(.checkbox)
+                            .font(.system(size: 13))
+                            .onChange(of: notificationsEnabled) { newValue in
+                                onNotificationToggle?(newValue)
+                            }
+
+                        Toggle("Luaj zerin tim para namazit", isOn: $voiceRemindersEnabled)
+                            .toggleStyle(.checkbox)
+                            .font(.system(size: 13))
+                            .disabled(!notificationsEnabled)
+
+                        Button(action: { showVoiceRecorder = true }) {
+                            HStack {
+                                Image(systemName: "mic.fill")
+                                Text("Regjistro zerin")
+                            }
+                            .font(.system(size: 12))
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(!notificationsEnabled || !voiceRemindersEnabled)
+                    }
+
+                    Divider()
+
+                    // Launch at Login
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Sistemi")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+
+                        Toggle("Hap me ndezjen e kompjuterit", isOn: $launchAtLogin)
+                            .toggleStyle(.checkbox)
+                            .font(.system(size: 13))
+                            .onChange(of: launchAtLogin) { newValue in
+                                updateLaunchAtLogin(newValue)
+                            }
+                    }
+
+                    Spacer(minLength: 16)
                 }
-                .labelsHidden()
-                .onChange(of: selectedCityId) { newValue in
-                    if let city = City.find(by: newValue) {
-                        onCityChange?(city)
-                    }
-                }
             }
 
             Divider()
-
-            // Display Options
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Shfaqja")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
-
-                Toggle("Shfaq emrin e namazit", isOn: $showPrayerName)
-                    .toggleStyle(.checkbox)
-                    .font(.system(size: 13))
-            }
-
-            Divider()
-
-            // Notifications
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Njoftimet")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
-
-                Toggle("Aktivizo njoftimet", isOn: $notificationsEnabled)
-                    .toggleStyle(.checkbox)
-                    .font(.system(size: 13))
-                    .onChange(of: notificationsEnabled) { newValue in
-                        onNotificationToggle?(newValue)
-                    }
-
-                Toggle("Luaj zërin tim para namazit", isOn: $voiceRemindersEnabled)
-                    .toggleStyle(.checkbox)
-                    .font(.system(size: 13))
-                    .disabled(!notificationsEnabled)
-
-                Button(action: { showVoiceRecorder = true }) {
-                    HStack {
-                        Image(systemName: "mic.fill")
-                        Text("Regjistro zërin")
-                    }
-                    .font(.system(size: 12))
-                }
-                .buttonStyle(.bordered)
-                .disabled(!notificationsEnabled || !voiceRemindersEnabled)
-            }
-
-            Divider()
-
-            // Launch at Login
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Sistemi")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
-
-                Toggle("Hap me ndezjen e kompjuterit", isOn: $launchAtLogin)
-                    .toggleStyle(.checkbox)
-                    .font(.system(size: 13))
-                    .onChange(of: launchAtLogin) { newValue in
-                        updateLaunchAtLogin(newValue)
-                    }
-            }
-
-            Spacer()
 
             // Footer
             HStack {
                 Spacer()
-                Text("Takvimi v1.0")
+                Text("Takvimi v1.1")
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
                 Spacer()
             }
+            .padding(.top, 12)
         }
         .padding(16)
-        .frame(width: 280, height: 420)
+        .frame(width: 300, height: 480)
         .sheet(isPresented: $showVoiceRecorder) {
             VoiceRecorderView()
         }
@@ -150,7 +174,7 @@ struct VoiceRecorderView: View {
         VStack(spacing: 16) {
             // Header
             HStack {
-                Text("Regjistro Zërin")
+                Text("Regjistro Zerin")
                     .font(.headline)
                 Spacer()
                 Button(action: { dismiss() }) {
@@ -160,7 +184,7 @@ struct VoiceRecorderView: View {
                 .buttonStyle(.plain)
             }
 
-            Text("Regjistro një mesazh për secilin namaz që do të luhet 15 minuta para kohës.")
+            Text("Regjistro nje mesazh per secilin namaz qe do te luhet 15 minuta para kohes.")
                 .font(.system(size: 11))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.leading)
@@ -171,12 +195,12 @@ struct VoiceRecorderView: View {
                     HStack {
                         Image(systemName: "mic.slash.fill")
                             .foregroundColor(.red)
-                        Text("Mikrofoni nuk është i lejuar")
+                        Text("Mikrofoni nuk eshte i lejuar")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.red)
                     }
 
-                    Button("Hap Cilësimet e Sistemit") {
+                    Button("Hap Cilesimet e Sistemit") {
                         audioService.openSystemPreferences()
                     }
                     .font(.system(size: 11))

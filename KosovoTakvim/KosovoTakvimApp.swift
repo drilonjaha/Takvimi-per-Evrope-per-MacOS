@@ -20,6 +20,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var viewModel: MenuBarViewModel?
     private var updateTimer: Timer?
     private var cancellables = Set<AnyCancellable>()
+    private var eventMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Hide dock icon
@@ -102,17 +103,38 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let button = statusItem?.button, let popover = popover else { return }
 
         if popover.isShown {
-            popover.performClose(nil)
+            closePopover()
         } else {
             viewModel?.updateCurrentTime()
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-
-            // Make popover active
             NSApp.activate(ignoringOtherApps: true)
+            startEventMonitor()
+        }
+    }
+
+    private func closePopover() {
+        popover?.performClose(nil)
+        stopEventMonitor()
+    }
+
+    private func startEventMonitor() {
+        // Monitor for clicks outside the popover
+        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            if self?.popover?.isShown == true {
+                self?.closePopover()
+            }
+        }
+    }
+
+    private func stopEventMonitor() {
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
         }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         updateTimer?.invalidate()
+        stopEventMonitor()
     }
 }
