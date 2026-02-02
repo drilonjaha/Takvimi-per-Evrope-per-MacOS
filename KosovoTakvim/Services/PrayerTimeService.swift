@@ -27,8 +27,8 @@ actor PrayerTimeService {
     static let shared = PrayerTimeService()
 
     private var cache: [String: DailyPrayerTimes] = [:]
-    private let cacheKey = "cachedPrayerTimes_v3" // v3: IZRS Swiss calculation method
-    private let oldCacheKeys = ["cachedPrayerTimes", "cachedPrayerTimes_v2"] // Old cache keys to clear
+    private let cacheKey = "cachedPrayerTimes_v4" // v4: Kosovo +9 min correction
+    private let oldCacheKeys = ["cachedPrayerTimes", "cachedPrayerTimes_v2", "cachedPrayerTimes_v3"] // Old cache keys to clear
 
     init() {
         // Clear old cache from previous versions
