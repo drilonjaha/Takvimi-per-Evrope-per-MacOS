@@ -443,6 +443,12 @@ struct PrayerTimesData2026 {
     }
 
     static func getPrayerTimes(for date: Date, city: City) -> DailyPrayerTimes? {
+        // Only return hardcoded BIM data for Kosovo cities
+        // Non-Kosovo cities should use the Aladhan API with their actual coordinates
+        guard city.country == .kosovo else {
+            return nil
+        }
+
         let calendar = Calendar.current
         let month = calendar.component(.month, from: date)
         let day = calendar.component(.day, from: date)
