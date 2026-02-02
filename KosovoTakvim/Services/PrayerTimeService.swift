@@ -27,9 +27,12 @@ actor PrayerTimeService {
     static let shared = PrayerTimeService()
 
     private var cache: [String: DailyPrayerTimes] = [:]
-    private let cacheKey = "cachedPrayerTimes"
+    private let cacheKey = "cachedPrayerTimes_v2" // v2: Fixed timezone-aware caching
+    private let oldCacheKey = "cachedPrayerTimes" // Old cache key to clear
 
     init() {
+        // Clear old cache from buggy version
+        UserDefaults.standard.removeObject(forKey: oldCacheKey)
         loadCacheFromDisk()
     }
 
@@ -37,8 +40,8 @@ actor PrayerTimeService {
         let calendar = Calendar.current
         let year = calendar.component(.year, from: date)
 
-        // Use official BIM Kosovo data for 2026 (always prioritize over cache)
-        if year == 2026 {
+        // For 2026 Kosovo cities: use official BIM data
+        if year == 2026 && city.country == .kosovo {
             if let times = PrayerTimesData2026.getPrayerTimes(for: date, city: city) {
                 let cacheId = cacheKey(for: city, date: date)
                 cache[cacheId] = times
@@ -49,20 +52,23 @@ actor PrayerTimeService {
 
         let cacheId = cacheKey(for: city, date: date)
 
-        // Check memory cache for non-2026 dates
+        // For non-Kosovo cities (and non-2026 Kosovo), check cache
         if let cached = cache[cacheId] {
-            return cached
+            // Verify cache entry is for the correct city (prevent cross-contamination)
+            if cached.city.id == city.id {
+                return cached
+            }
         }
 
-        // Fallback to API for other years
+        // Fetch from API with city-specific coordinates
         do {
             let times = try await fetchFromAPI(city: city, date: date)
             cache[cacheId] = times
             saveCacheToDisk()
             return times
         } catch {
-            // Try to return stale cache for same city
-            if let fallback = cache.values.first(where: { $0.city.id == city.id }) {
+            // Only use fallback cache for the SAME city, not any random cache entry
+            if let fallback = cache[cacheId], fallback.city.id == city.id {
                 return fallback
             }
             throw error
@@ -77,12 +83,16 @@ actor PrayerTimeService {
         dateFormatter.dateFormat = "dd-MM-yyyy"
         let dateString = dateFormatter.string(from: date)
 
+        // Get timezone identifier for the city's country
+        let timezone = getTimezone(for: city)
+
         var components = URLComponents(string: "\(baseURL)/\(dateString)")!
         components.queryItems = [
             URLQueryItem(name: "latitude", value: String(city.latitude)),
             URLQueryItem(name: "longitude", value: String(city.longitude)),
             URLQueryItem(name: "method", value: "99"),
-            URLQueryItem(name: "methodSettings", value: methodSettings)
+            URLQueryItem(name: "methodSettings", value: methodSettings),
+            URLQueryItem(name: "timezonestring", value: timezone)
         ]
 
         guard let url = components.url else {
@@ -152,6 +162,24 @@ actor PrayerTimeService {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         return "\(city.id)_\(dateFormatter.string(from: date))"
+    }
+
+    private func getTimezone(for city: City) -> String {
+        switch city.country {
+        case .kosovo: return "Europe/Belgrade" // Kosovo uses CET (same as Serbia)
+        case .switzerland: return "Europe/Zurich"
+        case .germany: return "Europe/Berlin"
+        case .austria: return "Europe/Vienna"
+        case .france: return "Europe/Paris"
+        case .netherlands: return "Europe/Amsterdam"
+        case .belgium: return "Europe/Brussels"
+        case .sweden: return "Europe/Stockholm"
+        case .norway: return "Europe/Oslo"
+        case .denmark: return "Europe/Copenhagen"
+        case .unitedKingdom: return "Europe/London"
+        case .italy: return "Europe/Rome"
+        case .finland: return "Europe/Helsinki"
+        }
     }
 
     private func loadCacheFromDisk() {
